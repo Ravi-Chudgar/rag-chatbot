@@ -1,9 +1,10 @@
-# RAG Chatbot (FastAPI + Ollama + FAISS)
+# RAG Chatbot (FastAPI + Multi-Provider LLM + FAISS)
 
-This project is a Retrieval-Augmented Generation (RAG) chatbot with login, per-user chat history, and admin history view.
+This project is a Retrieval-Augmented Generation (RAG) chatbot with support for multiple LLM providers, login, per-user chat history, and admin history view.
 
 ## Features
 
+- **Multi-Provider LLM Support**: Choose from Ollama, OpenAI, Claude (Anthropic), or HuggingFace
 - Ingest `.txt`, `.md`, and `.pdf` documents
 - Chunk and embed text with Ollama embeddings
 - Store vectors in local FAISS index
@@ -18,16 +19,17 @@ This project is a Retrieval-Augmented Generation (RAG) chatbot with login, per-u
 ```text
 rag-chatbot/
 ├── app/
-│   ├── config.py
+│   ├── config.py           # Configuration management
 │   ├── embeddings.py
 │   ├── ingest.py
+│   ├── llm_factory.py      # Multi-provider LLM factory
 │   ├── main.py
 │   ├── models.py
 │   ├── rag.py
 │   ├── utils.py
 │   └── vector_store.py
-├── data/                  # put source docs here
-├── vector_db/             # generated FAISS index
+├── data/                   # put source docs here
+├── vector_db/              # generated FAISS index
 ├── .env.example
 ├── requirements.txt
 └── run.py
@@ -42,12 +44,53 @@ pip install -r requirements.txt
 cp .env.example .env
 ```
 
-Make sure Ollama is running and pull models:
+## Configuration
+
+Edit `.env` and set `LLM_PROVIDER` to one of: `ollama`, `openai`, `claude`, or `huggingface`.
+
+### Using Ollama (Default)
+
+```bash
+# .env
+LLM_PROVIDER=ollama
+OLLAMA_BASE_URL=http://localhost:11434
+OLLAMA_CHAT_MODEL=llama3.1
+OLLAMA_EMBEDDING_MODEL=nomic-embed-text
+```
+
+Make sure Ollama is running:
 
 ```bash
 ollama serve
 ollama pull llama3.1
 ollama pull nomic-embed-text
+```
+
+### Using OpenAI
+
+```bash
+# .env
+LLM_PROVIDER=openai
+OPENAI_API_KEY=sk-...
+OPENAI_CHAT_MODEL=gpt-3.5-turbo  # or gpt-4, etc.
+```
+
+### Using Claude (Anthropic)
+
+```bash
+# .env
+LLM_PROVIDER=claude
+ANTHROPIC_API_KEY=sk-ant-...
+ANTHROPIC_CHAT_MODEL=claude-3-sonnet-20240229  # or claude-3-opus, etc.
+```
+
+### Using HuggingFace
+
+```bash
+# .env
+LLM_PROVIDER=huggingface
+HUGGINGFACE_API_KEY=hf_...
+HUGGINGFACE_CHAT_MODEL=HuggingFaceH4/zephyr-7b-beta
 ```
 
 ## Run

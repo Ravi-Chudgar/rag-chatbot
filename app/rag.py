@@ -2,9 +2,9 @@ from pathlib import Path
 
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_community.vectorstores import FAISS
-from langchain_ollama import ChatOllama
 
 from app.config import settings
+from app.llm_factory import get_chat_llm
 from app.models import SourceChunk
 from app.vector_store import load_vector_store, vector_store_exists
 
@@ -20,11 +20,7 @@ class RAGService:
             "You are a helpful assistant. Answer the question clearly and concisely.\n\n"
             "Question:\n{question}"
         )
-        self.llm = ChatOllama(
-            model=settings.ollama_chat_model,
-            base_url=settings.ollama_base_url,
-            temperature=0,
-        )
+        self.llm = get_chat_llm()
         self._cached_vector_store: FAISS | None = None
         self._cached_index_mtime: float | None = None
 
@@ -42,9 +38,21 @@ class RAGService:
     def answer(
         self, question: str, use_documents: bool = False
     ) -> tuple[str, list[SourceChunk], list[str], dict]:
+        provider = settings.llm_provider.lower()
+        if provider == "ollama":
+            model_name = settings.ollama_chat_model
+        elif provider == "openai":
+            model_name = settings.openai_chat_model
+        elif provider in ("claude", "anthropic"):
+            model_name = settings.anthropic_chat_model
+        elif provider == "huggingface":
+            model_name = settings.huggingface_chat_model
+        else:
+            model_name = "unknown"
+
         debug_trace: list[str] = [
             "1. Received chat request",
-            f"2. Using model: {settings.ollama_chat_model}",
+            f"2. Using provider: {provider}, model: {model_name}",
         ]
         rag_process = {
             "mode": "direct",
